@@ -5,7 +5,7 @@ from os.path import isfile, join
 def flip(sprites):
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
 
-def load_sprites(dir1, dir2, w, h, direction=False):
+def load_sprites(dir1, dir2, w, h, direction=False, scale_by=1):
     path = join("assets", dir1, dir2)
     images = [f for f in listdir(path) if isfile(join(path, f))]
     all_sprites = {}
@@ -17,7 +17,7 @@ def load_sprites(dir1, dir2, w, h, direction=False):
             surface = pygame.Surface((w, h), pygame.SRCALPHA, 32)
             rect = pygame.Rect(i* w, 0, w, h)
             surface.blit(sprite_sheet, (0, 0), rect)
-            sprites.append(surface)
+            sprites.append(pygame.transform.scale_by(surface, scale_by))
 
         if direction:
             all_sprites[image.replace(".png", "") + "_right"] = sprites
@@ -25,6 +25,7 @@ def load_sprites(dir1, dir2, w, h, direction=False):
         else:
             all_sprites[image.replace(".png", "")] = sprites
     return all_sprites
+
 
 class Player(pygame.sprite.Sprite):
     SPEED = 3
@@ -47,6 +48,8 @@ class Player(pygame.sprite.Sprite):
         self.name = name
         self.SPRITES = load_sprites("MainCharacters", self.name, 32, 32, True)
         self.player1 = player1
+        self.max_hp = 100
+        self.hp = self.max_hp
         
     def handle_vertical_collision(self, objs, dy, other):
         collided_objs = []
@@ -99,22 +102,23 @@ class Player(pygame.sprite.Sprite):
                 return "R"
 
     def handle_move(self, objects, other):
-        self.x_vel = 0
-        
-        left_collide = self.handle_horizontal_collision(objects, -self.SPEED * 2, other)
-        right_collide = self.handle_horizontal_collision(objects, self.SPEED * 2, other)
-        key = self.get_input()
-        if key == "L" and not left_collide:
-            self.move_x(self.SPEED, False)
-        elif key == "R" and not right_collide:
-            self.move_x(self.SPEED, True)
+        if self.hp > 0:
+            self.x_vel = 0
+            
+            left_collide = self.handle_horizontal_collision(objects, -self.SPEED * 2, other)
+            right_collide = self.handle_horizontal_collision(objects, self.SPEED * 2, other)
+            key = self.get_input()
+            if key == "L" and not left_collide:
+                self.move_x(self.SPEED, False)
+            elif key == "R" and not right_collide:
+                self.move_x(self.SPEED, True)
 
-        verts = self.handle_vertical_collision(objects, self.y_vel, other)
-        collideds = [*verts, left_collide, right_collide]
-        for o in collideds:
-            if o and o.name == "fire":
-                self.get_hit()
-        
+            verts = self.handle_vertical_collision(objects, self.y_vel, other)
+            collideds = [*verts, left_collide, right_collide]
+            for o in collideds:
+                if o and o.name == "fire":
+                    self.get_hit()
+
     def landed(self):
         self.fall_count = 0
         self.y_vel = 0
@@ -124,11 +128,12 @@ class Player(pygame.sprite.Sprite):
         self.y_vel = -self.y_vel
         
     def jump(self):
-        self.jump_count += 1
-        self.animation_count = 0
-        self.y_vel = -self.GRAVITY * 6
-        if self.jump_count == 1:
-            self.fall_count = 0
+        if self.hp > 0:
+            self.jump_count += 1
+            self.animation_count = 0
+            self.y_vel = -self.GRAVITY * 6
+            if self.jump_count == 1:
+                self.fall_count = 0
 
     def move(self, dx, dy):
         self.rect.x += dx
@@ -148,19 +153,38 @@ class Player(pygame.sprite.Sprite):
     def get_hit(self):
         self.hit = True
         self.hit_count += 1
+        self.hp -= 5
+        if self.hp <= 0:
+            self.animation_count = 0   
             
     def loop(self, fps):
-        self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
-        self.move(self.x_vel, self.y_vel)
-        
-        if self.hit:
-            self.hit_count += 1
-        if self.hit_count >= fps * 2:
-            self.hit_count = 0
-            self.hit = False
+        if self.hp > 0:
+            self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
+            self.move(self.x_vel, self.y_vel)
             
-        self.fall_count += 1
-        self.update_sprite()
+            if self.hit:
+                self.hit_count += 1
+            if self.hit_count >= fps:
+                self.hit_count = 0
+                self.hit = False
+                
+            self.fall_count += 1
+            self.update_sprite()
+        else:
+            self.x_vel = 0
+            self.y_vel = 0
+            if self.animation_count < 14:
+                self.play_dead_anim()
+            else:
+                self.rect.x = -500
+                self.rect.y = -500
+
+            
+    def play_dead_anim(self):
+        sprites = load_sprites("MainCharacters", "", 96, 96, False, 1/3)["Desappearing (96x96)"]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY)
+        self.sprite = sprites[sprite_index]
+        self.animation_count += 1
         
     def update_sprite(self):
         sprite_sheet = "idle"
@@ -187,5 +211,10 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
         self.mask = pygame.mask.from_surface(self.sprite)
         
+        
+        
     def draw(self, window): 
         window.blit(self.sprite, (self.rect.x, self.rect.y))
+        ratio = self.hp / self.max_hp
+        pygame.draw.rect(window, "red",(self.rect.x, self.rect.y - 8, 32, 6) )
+        pygame.draw.rect(window, "green",(self.rect.x, self.rect.y - 8, 32 * ratio, 6) )

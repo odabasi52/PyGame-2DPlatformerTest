@@ -13,8 +13,9 @@ def main(window):
     run = True
     clock = pygame.time.Clock()
     map = Map("Blue")
-    objects, player1, player2 = map.create_map()
+    objects, player1, player2, fire_traps = map.create_map()
 
+    objects += fire_traps
     while run:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -32,6 +33,9 @@ def main(window):
         player2.loop(FPS)
         player1.handle_move(objects, player2)
         player2.handle_move(objects, player1)
+        for fire in fire_traps:
+            fire.on()
+            fire.loop()
         map.draw_map(window, player1, player2, objects)
 
     pygame.quit()

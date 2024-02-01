@@ -53,6 +53,7 @@ class Map:
         player1 = None
         player2 = None
         blocks = []
+        fires = []
         y = 0
         for row in self.game_map:
             x = 0
@@ -65,10 +66,8 @@ class Map:
                     blocks.append(Block(x, y, 48))
                 elif char == "F":
                     fire = Fire(x + 16,y + 16, 16, 32)
-                    blocks.append(fire)
-                    fire.on()
-                    fire.loop()
+                    fires.append(fire)
                 x += 48
             y += 48
         
-        return blocks, player1, player2
+        return blocks, player1, player2, fires
