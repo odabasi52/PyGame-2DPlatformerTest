@@ -1,56 +1,38 @@
 import pygame
-from os.path import join
 
-WIDTH, HEIGHT = 1280, 720
+WIDTH, HEIGHT = 1152, 720
 FPS = 60
-SPEED = 5
 
 pygame.init()
 pygame.display.set_caption("Eda")
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 
-from player import Player
-
-def get_background(color):
-    image = pygame.image.load(join("assets", "background", color))
-    _, _, width, height = image.get_rect()
-    tiles_pos = []
-    
-    for x in range(WIDTH // width + 1):
-        for y in range(HEIGHT // height + 1):
-            pos = (x * width, y * height)
-            tiles_pos.append(pos)
-    return tiles_pos, image
-
-def draw(window, player):
-    tiles_pos, bg_img = get_background("Blue.png")
-    for tile in tiles_pos:
-        window.blit(bg_img, tile)
-    player.draw(window)
-    pygame.display.update()
-
-def handle_move(player):
-    keys = pygame.key.get_pressed()
-    player.x_vel = 0
-    if keys[pygame.K_a]:
-        player.move_x(SPEED, False)
-    elif keys[pygame.K_d]:
-        player.move_x(SPEED, True)    
+from map import Map
 
 def main(window):
     run = True
     clock = pygame.time.Clock()
-    player = Player(100, 100, 50, 50)
-    
+    map = Map("Blue")
+    objects, player1, player2 = map.create_map()
+
     while run:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 break
-        player.loop(FPS)
-        handle_move(player)
-        draw(window, player)
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w and player1.jump_count < 2:
+                    player1.jump()
+                if event.key == pygame.K_UP and player2.jump_count < 2:
+                    player2.jump()
+
+        player1.loop(FPS)
+        player2.loop(FPS)
+        player1.handle_move(objects, player2)
+        player2.handle_move(objects, player1)
+        map.draw_map(window, player1, player2, objects)
 
     pygame.quit()
     exit()
