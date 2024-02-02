@@ -11,6 +11,7 @@ class Level:
         # X: Tile P: Player transformation
         self.setup_level(level_map)
         self.x_shift = 0
+        self.current_x = 0 
 
     def setup_level(self, level_map):
         for row_index, row in enumerate(level_map):
@@ -53,9 +54,17 @@ class Level:
                 # player going left
                 if player.direction.x < 0:
                     player.rect.left = tile.rect.right
+                    player.on_left = True
+                    self.current_x = player.rect.left
                 # player going right
                 elif player.direction.x > 0:
                     player.rect.right = tile.rect.left
+                    player.on_right = True
+                    self.current_x = player.rect.right
+        if player.on_left and (player.rect.left < self.current_x or player.direction.x >= 0):
+            player.on_left = False
+        if player.on_right and (player.rect.right > self.current_x or player.direction.x <= 0):
+            player.on_right = False
     
     def vertical_movement_collision(self):
         player = self.player.sprite
@@ -68,10 +77,16 @@ class Level:
                 if player.direction.y > 0:
                     player.rect.bottom = tile.rect.top
                     player.direction.y = 0
+                    player.on_ground = True
                 # player going upwards
                 elif player.direction.y < 0:
                     player.rect.top = tile.rect.bottom
                     player.direction.y = player.gravity
+                    player.on_ceiling = True
+        if player.on_ground and player.direction.y < 0 or player.direction.y > 1:
+            player.on_ground = False
+        if player.on_ceiling and player.direction.y > 0:
+            player.on_ceiling = False
                     
     def run(self):
         # map blocks (tiles)

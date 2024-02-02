@@ -4,12 +4,12 @@ level_map = [
     '                              XXXXXXXXXXXXXXXXX',
     '                              XXXXXXXXXXXXXXXXX',
     ' XX    XXX            XX      XXXXXXXXXXXXXXXXX',
-    ' XXP                          XXXXXXXXXXXXXXXXX',
+    ' XX P                         XXXXXXXXXXXXXXXXX',
     ' XXXX          XX             XXXXXXXXXXXXXXXXX',
     ' XXXX        XX                                ',
     ' XX    X   XXXX    XX  XX                      ',
-    '       X   XXXX    XX  XXX                     ',
-    '    XXXX   XXXXXX  XX  XXXX   X                ',
+    '       X   XXXX    XX  XXX           X   X     ',
+    '    XXXX   XXXXXX  XX  XXXX   X      X       X ',
     'XXXXXXXX   XXXXXX  XX  XXXXXXXXXXXXXXXXXXXXXXXX',
 ]
 # size of the blocks
