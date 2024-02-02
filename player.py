@@ -17,7 +17,7 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2(0, 0)  # no movement initially because (x, y) is set to (0, 0)
         self.speed = 8
         self.gravity = 0.8
-        self.jump_speed = -16
+        self.jump_speed = -14
     
     def import_charactes_assets(self):
         character_path = "graphics/character/"
