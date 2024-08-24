@@ -1,2 +1,2 @@
-# Eda_Talha_Game
-PyGame
+# 2D PlatformerTest
+Testing pygame
